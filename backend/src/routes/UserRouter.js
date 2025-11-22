@@ -1,13 +1,20 @@
-const express = require("express");
-const User = require("../db/userModel");
-const router = express.Router();
+import express from "express";
+import models from "../modelData/models.js";
+import cors from "cors";
 
-router.post("/", async (request, response) => {
+const app = express();
+app.use(cors());
+app.use(express.json());
 
+app.get("/list", async (req, res) => {
+    const users = models.userListModel();
+    res.status(200).json(users);
 });
 
-router.get("/", async (request, response) => {
-
+app.get("/:id", async (req, res) => {
+    const userId = req.params.id;
+    const user = models.userModel(userId);
+    res.status(200).json(user);
 });
 
-module.exports = router;
+export default app;

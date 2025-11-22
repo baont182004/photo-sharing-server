@@ -1,13 +1,15 @@
-const express = require("express");
-const Photo = require("../db/photoModel");
-const router = express.Router();
+import express from "express";
+import cors from "cors";
+import models from "../modelData/models.js";
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-router.post("/", async (request, response) => {
-  
+app.get("/photosOfUser/:id", async (req, res) => {
+    const userId = req.params.id;
+    const photos = models.photoOfUserModel(userId);
+    res.status(200).json(photos);
 });
 
-router.get("/", async (request, response) => {
-  
-});
+export default app;
 
-module.exports = router;
