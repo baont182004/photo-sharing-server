@@ -69,6 +69,7 @@ export const api = {
 export function imageUrl(fileName) {
     return `${API_URL}/images/${fileName}`;
 };
+
 // ===== Uploads =====
 export async function uploadPhoto(file) {
     const token = getToken();
