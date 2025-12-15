@@ -67,3 +67,26 @@ export async function addComment(req, res) {
         return res.status(500).send("Server error");
     }
 }
+
+// Post /photos/new
+export async function uploadNewPhoto(req, res) {
+    try {
+        if (!req.file) {
+            return res.status(400).send("No file uploaded");
+        }
+        const userId = req.user?._id;
+        if (!userId) return res.sendStatus(401);
+
+        const photo = await Photo.create({
+            file_name: req.file.filename,
+            date_time: new Date(),
+            user_id: userId,
+            comments: [],
+        });
+
+        return res.status(201).json(photo);
+    } catch (err) {
+        console.error("uploadNewPhoto error:", err);
+        return res.status(500).send("Server error");
+    }
+}

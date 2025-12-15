@@ -29,9 +29,8 @@ export default function UserPhotos() {
     const me = getUser();
 
     const [photos, setPhotos] = useState(null);
-    const [draft, setDraft] = useState({}); // { [photoId]: "text" }
-    const [submitting, setSubmitting] = useState({}); // { [photoId]: true/false }
-
+    const [draft, setDraft] = useState({});
+    const [submitting, setSubmitting] = useState({});
     useEffect(() => {
         let alive = true;
 
@@ -58,7 +57,6 @@ export default function UserPhotos() {
                 comment: text,
             });
 
-            // replace photo in list
             setPhotos((prev) =>
                 (prev || []).map((p) => (p._id === photoId ? updatedPhoto : p))
             );

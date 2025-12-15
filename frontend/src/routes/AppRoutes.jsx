@@ -4,8 +4,8 @@ import { Routes, Route } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 
 import Home from "../pages/public/Home";
-import Login from "../pages/public/Login";
-import Register from "../pages/public/Register";
+import LoginRegister from "../pages/public/LoginRegister";
+
 import NoMatch from "../pages/public/NoMatch";
 
 import Profile from "../pages/protected/Profile";
@@ -26,8 +26,7 @@ export default function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route path="/" element={<Home />} />
 
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route path="/loginregister" element={<LoginRegister />} />
 
                 <Route element={<ProtectedRoute />}>
                     <Route path="/users" element={<UserList />} />

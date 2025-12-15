@@ -46,36 +46,31 @@ export default function AppLayout() {
 
                 {user && (
                     <Button component={Link} to="/users" variant="text">
-                        Users
+                        Người dùng
                     </Button>
                 )}
 
                 {user && (
                     <Button component={Link} to="/profile" variant="text">
-                        Profile
+                        Hồ sơ
                     </Button>
                 )}
 
                 {user?.role === "admin" && (
                     <Button component={Link} to="/admin" variant="text">
-                        Admin
+                        Quản trị
                     </Button>
                 )}
 
                 <Box sx={{ flexGrow: 1 }} />
 
                 {!user ? (
-                    <>
-                        <Button component={Link} to="/login" variant="contained">
-                            Login
-                        </Button>
-                        <Button component={Link} to="/register" variant="outlined">
-                            Register
-                        </Button>
-                    </>
+                    <Button component={Link} to="/loginregister" variant="contained">
+                        Đăng nhập/Đăng ký
+                    </Button>
                 ) : (
                     <Button onClick={handleLogout} color="error" variant="contained">
-                        Logout
+                        Đăng xuất
                     </Button>
                 )}
             </Box>

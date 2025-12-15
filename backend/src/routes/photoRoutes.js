@@ -1,13 +1,37 @@
 import express from "express";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+import crypto from "crypto";
+
 import { verifyToken } from "../middleware/verifyToken.js";
-import { getPhotosOfUser, addComment } from "../controllers/photoController.js";
+import { uploadNewPhoto, getPhotosOfUser, addComment } from "../controllers/photoController.js";
+
 
 const router = express.Router();
 
-router.use((req, res, next) => {
-    if (req.path.startsWith("/images/")) return next();
-    return verifyToken(req, res, next);
+const imagesDir = path.join(process.cwd(), "images");
+fs.mkdirSync(imagesDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, imagesDir),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || ".jpg";
+        const name = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
+        cb(null, name);
+    },
 });
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype?.startsWith("image/")) cb(null, true);
+        else cb(new Error("Only image files are allowed"));
+    },
+});
+
+router.use(verifyToken);
+router.post("/photos/new", upload.single("uploadedphoto"), uploadNewPhoto);
 router.get("/photosOfUser/:id", getPhotosOfUser);
 router.post("/commentsOfPhoto/:photo_id", addComment);
 

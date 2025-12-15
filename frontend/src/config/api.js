@@ -46,7 +46,7 @@ async function request(path, { method = "GET", body } = {}) {
 
     if (!res.ok) {
         const msg =
-            (data && data.message) ||
+            (data && (data.message || data.error)) ||
             (typeof data === "string" && data) ||
             "API error";
         const err = new Error(msg);
@@ -68,6 +68,38 @@ export const api = {
 // ===== Utils =====
 export function imageUrl(fileName) {
     return `${API_URL}/images/${fileName}`;
+};
+// ===== Uploads =====
+export async function uploadPhoto(file) {
+    const token = getToken();
+
+    const form = new FormData();
+
+    form.append("uploadedphoto", file)
+    const res = await fetch(`${API_URL}/photos/new`, {
+        method: "POST",
+        headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: form,
+    });
+
+    const contentType = res.headers.get("content-type") || "";
+    const data = contentType.includes("application/json")
+        ? await res.json().catch(() => null)
+        : await res.text().catch(() => "");
+
+    if (!res.ok) {
+        const msg =
+            (data && (data.message || data.error)) ||
+            (typeof data === "string" && data) ||
+            "Upload failed";
+        const err = new Error(msg);
+        err.status = res.status;
+        throw err;
+    }
+
+    return data;
 }
 
 export { API_URL };
