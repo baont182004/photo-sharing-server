@@ -1,11 +1,46 @@
 // src/config/api.js
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+const API_URL =
+    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_URL) ||
+    process.env.REACT_APP_API_URL ||
+    "http://localhost:3001";
+
+const hasWindow = typeof window !== "undefined";
+const tabId =
+    hasWindow && typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
+const broadcast =
+    hasWindow && typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("auth") : null;
 
 let accessToken = null;
 let authUser = null;
 let refreshPromise = null;
 
 const dispatchAuthChange = () => window.dispatchEvent(new Event("authchange"));
+
+const applyAuthState = ({ token, user, broadcastChange = true }) => {
+    accessToken = token || null;
+    authUser = user || null;
+    dispatchAuthChange();
+    if (broadcastChange && broadcast) {
+        broadcast.postMessage({ type: "set", accessToken, user: authUser, from: tabId });
+    }
+};
+
+if (broadcast) {
+    broadcast.onmessage = (event) => {
+        const msg = event?.data;
+        if (!msg || typeof msg !== "object") return;
+        if (msg.from && msg.from === tabId) return;
+
+        if (msg.type === "set") {
+            applyAuthState({ token: msg.accessToken, user: msg.user, broadcastChange: false });
+        }
+        if (msg.type === "clear") {
+            applyAuthState({ token: null, user: null, broadcastChange: false });
+        }
+    };
+}
 
 // ===== Auth storage =====
 export function getAccessToken() {
@@ -17,15 +52,14 @@ export function getUser() {
 }
 
 export function setAuth({ accessToken: token, user }) {
-    accessToken = token || null;
-    authUser = user || null;
-    dispatchAuthChange();
+    applyAuthState({ token, user, broadcastChange: true });
 }
 
 export function clearAuth() {
-    accessToken = null;
-    authUser = null;
-    dispatchAuthChange();
+    applyAuthState({ token: null, user: null, broadcastChange: true });
+    if (broadcast) {
+        broadcast.postMessage({ type: "clear", from: tabId });
+    }
 }
 
 export async function bootstrapAuth() {
@@ -75,6 +109,14 @@ async function refreshAccessToken() {
     }
 }
 
+const extractErrorCode = (data) =>
+    data && typeof data === "object" && "code" in data ? data.code : undefined;
+
+const extractErrorMessage = (data, fallback) =>
+    (data && (data.message || data.error)) ||
+    (typeof data === "string" && data) ||
+    fallback;
+
 // ===== Request helper =====
 async function request(path, { method = "GET", body, headers, retry = true } = {}) {
     const res = await fetch(`${API_URL}${path}`, {
@@ -93,7 +135,14 @@ async function request(path, { method = "GET", body, headers, retry = true } = {
         ? await res.json().catch(() => null)
         : await res.text().catch(() => "");
 
-    if (res.status === 401 && retry && !path.startsWith("/admin/refresh")) {
+    const errorCode = extractErrorCode(data);
+    const shouldRefresh =
+        res.status === 401 &&
+        retry &&
+        errorCode === "token_expired" &&
+        !path.startsWith("/admin/refresh");
+
+    if (shouldRefresh) {
         try {
             await refreshAccessToken();
             return request(path, { method, body, headers, retry: false });
@@ -104,12 +153,10 @@ async function request(path, { method = "GET", body, headers, retry = true } = {
     }
 
     if (!res.ok) {
-        const msg =
-            (data && (data.message || data.error)) ||
-            (typeof data === "string" && data) ||
-            "API error";
+        const msg = extractErrorMessage(data, "API error");
         const err = new Error(msg);
         err.status = res.status;
+        err.code = errorCode;
         throw err;
     }
 
@@ -148,7 +195,9 @@ export async function uploadPhoto(file, { retried } = {}) {
         ? await res.json().catch(() => null)
         : await res.text().catch(() => "");
 
-    if (res.status === 401 && !retried) {
+    const errorCode = extractErrorCode(data);
+
+    if (res.status === 401 && errorCode === "token_expired" && !retried) {
         try {
             await refreshAccessToken();
             return uploadPhoto(file, { retried: true });
@@ -159,12 +208,10 @@ export async function uploadPhoto(file, { retried } = {}) {
     }
 
     if (!res.ok) {
-        const msg =
-            (data && (data.message || data.error)) ||
-            (typeof data === "string" && data) ||
-            "Upload failed";
+        const msg = extractErrorMessage(data, "Upload failed");
         const err = new Error(msg);
         err.status = res.status;
+        err.code = errorCode;
         throw err;
     }
 
