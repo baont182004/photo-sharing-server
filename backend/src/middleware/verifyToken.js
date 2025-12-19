@@ -20,11 +20,14 @@ export const verifyToken = (req, res, next) => {
         });
 
         const userId = decoded.sub || decoded._id || decoded.id;
+        if (!userId) {
+            return unauthorized(res, "Invalid token", "invalid_token");
+        }
         req.user = {
+            sub: userId,
             _id: userId,
             id: userId,
             role: decoded.role || "user",
-            login_name: decoded.login_name,
             tokenId: decoded.jti,
         };
 

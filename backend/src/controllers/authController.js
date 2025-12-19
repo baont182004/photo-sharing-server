@@ -198,7 +198,7 @@ export async function logout(req, res) {
 
 export async function me(req, res) {
     try {
-        const userId = req.user?._id || req.user?.id;
+        const userId = req.user?.sub || req.user?._id || req.user?.id;
         if (!userId) return res.status(401).json({ message: "Authentication required" });
 
         const user = await User.findById(userId);
