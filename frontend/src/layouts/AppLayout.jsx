@@ -21,7 +21,7 @@ export default function AppLayout() {
         } catch {
         } finally {
             clearAuth();
-            navigate("/login");
+            navigate("/loginregister");
         }
     };
 

@@ -54,7 +54,7 @@ export default function LoginRegister() {
                 password: loginPassword,
             });
 
-            setAuth({ token: data.token, user: data.user });
+            setAuth({ accessToken: data.accessToken, user: data.user });
 
             const goBack = loc.state?.from;
             nav(goBack || `/users/${data.user._id}`);

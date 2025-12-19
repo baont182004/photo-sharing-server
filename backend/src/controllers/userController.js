@@ -1,4 +1,7 @@
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+
+const SALT_ROUNDS = parseInt(process.env.PASSWORD_SALT_ROUNDS || "12", 10);
 
 // Get /user/list
 export async function getUserList(req, res) {
@@ -58,9 +61,11 @@ export async function register(req, res) {
             return res.status(400).json({ error: "login_name already exists" });
         }
 
+        const passwordHash = await bcrypt.hash(password.trim(), SALT_ROUNDS);
+
         const user = await User.create({
             login_name: login_name.trim(),
-            password: password.trim(),
+            password: passwordHash,
             first_name: first_name.trim(),
             last_name: last_name.trim(),
             location,

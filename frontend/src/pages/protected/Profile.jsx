@@ -4,8 +4,14 @@ import { Paper, Typography } from "@mui/material";
 import { api, getUser } from "../../config/api";
 
 export default function Profile() {
-    const authUser = getUser();
+    const [authUser, setAuthUser] = useState(getUser());
     const [detail, setDetail] = useState(null);
+
+    useEffect(() => {
+        const onAuthChange = () => setAuthUser(getUser());
+        window.addEventListener("authchange", onAuthChange);
+        return () => window.removeEventListener("authchange", onAuthChange);
+    }, []);
 
     useEffect(() => {
         let alive = true;

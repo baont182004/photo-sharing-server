@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import { Link, useMatch, useNavigate } from "react-router-dom";
-import { api, getUser, getToken, uploadPhoto } from "../../config/api";
+import { api, getUser, getAccessToken, uploadPhoto } from "../../config/api";
 
 export default function TopBar() {
     const yourName = "Nguyễn Thái Bảo - B22DCAT032";
@@ -32,7 +32,7 @@ export default function TopBar() {
             return;
         }
 
-        if (!getToken()) {
+        if (!getAccessToken()) {
             setContextText("Photo Sharing");
             return;
         }
